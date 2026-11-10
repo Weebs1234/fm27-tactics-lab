@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" data-own>
+<meta name="viewport" content="width=device-width,initial-scale=1" data-own>
+<title data-own>FM27 Tactics Lab</title>
+<link data-own rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style data-own>
+:root{--bg:#0b1310;--panel:#131e19;--panel2:#1a2822;--line:#253830;--text:#e8f0eb;--muted:#8fa69a;--acc:#c8f43a;--accInk:#16200a;--good:#4ade80;--ok:#f5b942;--bad:#f06161;--pitchA:#1b5636;--pitchB:#1e5d3b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 Barlow,system-ui,sans-serif}
+button,select,input,textarea{font:inherit;color:inherit}
+.h{font-family:"Barlow Condensed",sans-serif;letter-spacing:.02em}
+header{position:sticky;top:0;z-index:20;background:rgba(11,19,16,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;gap:10px}
+.logo{font-family:"Barlow Condensed";font-weight:700;font-size:20px;white-space:nowrap}
+.logo span{color:var(--acc)}
+#tacticSel{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 8px}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn.acc{background:var(--acc);color:var(--accInk);border-color:var(--acc);font-weight:700}
+.btn.sm{padding:5px 9px;font-size:13px}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--bad)}
+main{max-width:760px;margin:0 auto;padding:12px 12px 96px}
+section{display:none}section.on{display:block}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;background:rgba(19,30,25,.97);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+nav.tabs button{flex:1;background:none;border:0;padding:8px 4px;border-radius:10px;font-family:"Barlow Condensed";font-weight:600;font-size:15px;color:var(--muted);cursor:pointer}
+nav.tabs button.on{color:var(--accInk);background:var(--acc)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1}
+.seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{flex:1;border:0;background:none;padding:6px 8px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:600;font-size:13px}
+.seg button.on{background:var(--acc);color:var(--accInk)}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);flex:1;min-width:120px}
+select.in,input.in,textarea.in{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 8px;width:100%}
+.pitchWrap{border-radius:14px;overflow:hidden;border:1px solid var(--line);margin:10px 0;background:var(--pitchA)}
+svg.pitch{display:block;width:100%;height:auto;max-height:68vh}
+.pl{cursor:pointer}
+.mut{color:var(--muted)}.small{font-size:12.5px}
+.slots .s{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;padding:8px 4px;border-top:1px solid var(--line);cursor:pointer}
+.slots .s:first-child{border-top:0}
+.pos{font-family:"Barlow Condensed";font-weight:700;font-size:14px;background:var(--panel2);border-radius:7px;text-align:center;padding:3px 0}
+.chip{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);margin:2px 3px 2px 0}
+.chip.on{background:var(--acc);color:var(--accInk);border-color:var(--acc)}
+.score{font-family:"Barlow Condensed";font-weight:700;font-size:16px;min-width:34px;text-align:center;border-radius:7px;padding:1px 5px}
+.g{color:#0b1a10;background:var(--good)}.o{color:#2a1d02;background:var(--ok)}.b{color:#2a0707;background:var(--bad)}.n{background:var(--panel2);color:var(--muted)}
+h3{font-family:"Barlow Condensed";font-size:18px;margin:0 0 8px;font-weight:700}
+h4{font-family:"Barlow Condensed";font-size:16px;margin:12px 0 6px}
+.ti{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+details summary{cursor:pointer;font-family:"Barlow Condensed";font-weight:700;font-size:17px;list-style:none}
+details summary::after{content:" ▾";color:var(--muted)}
+.sheetBg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40;display:none}
+.sheetBg.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-height:88vh;overflow:auto;background:var(--panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .22s ease;max-width:760px;margin:0 auto}
+.sheet.on{transform:none}
+.roleList{display:flex;flex-direction:column;gap:6px}
+.role{display:grid;grid-template-columns:52px 1fr auto;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;cursor:pointer;text-align:left}
+.role.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.role b{font-family:"Barlow Condensed";font-size:14px}
+.attrs{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:6px}
+.attr{display:flex;align-items:center;justify-content:space-between;gap:4px;background:var(--panel2);border-radius:8px;padding:3px 4px 3px 8px;font-size:13px}
+.attr input{width:44px;text-align:center;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 2px}
+.plist .p{display:flex;gap:10px;align-items:center;padding:9px 2px;border-top:1px solid var(--line);cursor:pointer}
+.plist .p:first-child{border-top:0}
+.matrix{overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:10px}
+.matrix table{border-collapse:separate;border-spacing:0;font-size:13px}
+.matrix th,.matrix td{padding:4px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+.matrix th{position:sticky;top:0;background:var(--panel2);z-index:2;font-family:"Barlow Condensed";font-weight:700}
+.matrix td:first-child,.matrix th:first-child{position:sticky;left:0;background:var(--panel);z-index:1;text-align:left;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.matrix th:first-child{z-index:3;background:var(--panel2)}
+.matrix td .score{display:block;cursor:pointer}
+.matrix td.cur .score{outline:2px solid var(--acc)}
+.chat{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+.msg{padding:10px 12px;border-radius:14px;max-width:92%;overflow-wrap:anywhere}
+.msg.u{align-self:flex-end;background:var(--acc);color:var(--accInk);border-bottom-right-radius:4px}
+.msg.a{align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.a p{margin:4px 0}.msg.a ul{margin:4px 0;padding-left:18px}.msg.a h4{margin:8px 0 4px}
+.msg code{background:var(--panel2);padding:0 4px;border-radius:4px}
+.prop{margin-top:8px;padding:10px;border-radius:10px;background:var(--panel2);border:1px dashed var(--acc)}
+.composer{position:sticky;bottom:72px;display:flex;gap:8px;background:var(--bg);padding-top:6px}
+.composer textarea{flex:1;resize:none;min-height:44px;max-height:140px}
+.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:99px;font-weight:600;font-size:13.5px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+.empty{text-align:center;padding:22px 10px;color:var(--muted)}
+.legend{display:flex;gap:10px;font-size:12px;color:var(--muted);align-items:center;flex-wrap:wrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<header data-own>
+  <div class="logo">FM27 <span>Tactics Lab</span></div>
+  <select id="tacticSel" aria-label="Tactic"></select>
+  <button class="btn sm" id="tacMenuBtn" aria-label="Tactic options">⋯</button>
+  <button class="btn sm acc" id="saveBtn">Save</button>
+</header>
+<main data-own>
+  <section id="tab-board" class="on"></section>
+  <section id="tab-squad"></section>
+  <section id="tab-fit"></section>
+  <section id="tab-ai"></section>
+</main>
+<nav class="tabs" data-own>
+  <button data-tab="board" class="on">Board</button>
+  <button data-tab="squad">Squad</button>
+  <button data-tab="fit">Fit</button>
+  <button data-tab="ai">Assistant</button>
+</nav>
+<div class="sheetBg" id="sheetBg" data-own></div>
+<div class="sheet" id="sheet" data-own></div>
+<div class="toast" id="toast" data-own></div>
+<script id="saved-state" type="application/json" data-own>null</script>
+<script data-own>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+// Capture our own markup before rendering, for cloud saves.
+const OWN_HEAD=$$('head [data-own]').map(e=>e.outerHTML).join('\n');
+const OWN_BODY=$$('body > [data-own]').map(e=>e.outerHTML).join('\n');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+/* ---------- Data ---------- */
+const ATTR_GROUPS=[
+ ['Technical',['Cro','Dri','Fin','Fir','Hea','Lon','Mar','Pas','Tck','Tec']],
+ ['Mental',['Agg','Ant','Bra','Cmp','Cnt','Dec','Det','Fla','OtB','Pos','Tea','Vis','Wor']],
+ ['Physical',['Acc','Agi','Bal','Jum','Pac','Sta','Str']],
+ ['Goalkeeping',['Aer','Cmd','Com','Han','Kic','1v1','Ref','Rus']]];
+const ATTR_NAME={Cro:'Crossing',Dri:'Dribbling',Fin:'Finishing',Fir:'First Touch',Hea:'Heading',Lon:'Long Shots',Mar:'Marking',Pas:'Passing',Tck:'Tackling',Tec:'Technique',Agg:'Aggression',Ant:'Anticipation',Bra:'Bravery',Cmp:'Composure',Cnt:'Concentration',Dec:'Decisions',Det:'Determination',Fla:'Flair',OtB:'Off the Ball',Pos:'Positioning',Tea:'Teamwork',Vis:'Vision',Wor:'Work Rate',Acc:'Acceleration',Agi:'Agility',Bal:'Balance',Jum:'Jumping Reach',Pac:'Pace',Sta:'Stamina',Str:'Strength',Aer:'Aerial Reach',Cmd:'Command of Area',Com:'Communication',Han:'Handling',Kic:'Kicking','1v1':'One on Ones',Ref:'Reflexes',Rus:'Rushing Out'};
+const ALL_ATTRS=ATTR_GROUPS.flatMap(g=>g[1]);
+const GK_ATTRS=ATTR_GROUPS[3][1];
+const GROUPS={GK:['GK'],CB:['DCL','DC','DCR'],FB:['DL','DR'],WB:['WBL','WBR'],DM:['DML','DM','DMR'],CM:['MCL','MC','MCR'],WM:['ML','MR'],AW:['AML','AMR'],AM:['AMCL','AMC','AMCR'],ST:['STL','ST','STR']};
+const GROUP_LABEL={GK:'Goalkeeper',CB:'Centre-back',FB:'Full-back',WB:'Wing-back',DM:'Defensive mid',CM:'Central mid',WM:'Wide mid',AW:'Wide attacker',AM:'Attacking mid',ST:'Striker'};
+const POS_GROUP={};for(const g in GROUPS)for(const p of GROUPS[g])POS_GROUP[p]=g;
+const RELATED={GK:[],CB:['FB','DM'],FB:['WB','CB'],WB:['FB','WM'],DM:['CM','CB'],CM:['DM','AM','WM'],AM:['CM','ST','AW'],WM:['AW','WB','CM'],AW:['WM','AM','ST'],ST:['AM','AW']};
+
+const R_RAW=[
+['ip','GK','Goalkeeper','GK','Han Ref Aer Cmd Kic','Pos Cnt Dec','Traditional keeper with safe distribution.'],
+['ip','BPGK','Ball-Playing Goalkeeper','GK','Pas Fir Kic Cmp Vis','Han Ref Dec','Joins the build-up and takes more passing risks.'],
+['ip','NNGK','No-Nonsense Goalkeeper','GK','Kic Han Ref','Cmd Aer Str','Clears danger long, takes no risks.'],
+['ip','CB','Centre-Back','CB','Hea Mar Tck Pos Str','Jum Cnt Dec Pas','Balanced defender who recycles possession.'],
+['ip','BPCB','Ball-Playing Centre-Back','CB','Pas Cmp Vis Fir Tec','Tck Pos Mar Hea','Looks for progressive passes from deep.'],
+['ip','NNCB','No-Nonsense Centre-Back','CB','Hea Tck Str Jum Bra','Mar Pos Agg','Clears the ball and avoids risky passes.'],
+['ip','ACB','Advanced Centre-Back','CB','Pas Dri Fir Cmp Dec Vis','Ant Tck Sta','Steps into midfield during build-up.'],
+['ip','OCB','Overlapping Centre-Back','CB','Sta Pac Cro Dri OtB','Tck Mar Pos','Overlaps the wide player from a back three.'],
+['ip','WCB','Wide Centre-Back','CB','Pas Cro Dri Sta Pac','Tck Mar Pos','Carries the ball wide in a back three.'],
+['ip','FB','Full-Back','FB WB','Tck Mar Pos Cro Sta','Pas Tea Ant','Supports down the flank without overcommitting.'],
+['ip','IFB','Inside Full-Back','FB WB','Pas Fir Cmp Dec Tea','Tck Pos Vis','Tucks into midfield in possession.'],
+['ip','WB','Wing-Back','FB WB','Cro Sta Pac Dri OtB Wor','Tck Tec','Provides all the width on the flank.'],
+['ip','IWB','Inside Wing-Back','FB WB','Pas Fir Dec Vis Tec','Sta Tck Cmp','Drifts inside to create central overloads.'],
+['ip','PWB','Playmaking Wing-Back','FB WB','Pas Vis Tec Fir Dec Cro','Sta OtB','Creates from the flank as well as providing width.'],
+['ip','DM','Defensive Midfielder','DM','Tck Pos Ant Tea Cnt','Pas Dec','Shields the back line and keeps it simple.'],
+['ip','DLP','Deep-Lying Playmaker','DM CM','Pas Vis Cmp Fir Tec Dec','Tea Ant','Dictates tempo from deep.'],
+['ip','HB','Half Back','DM','Pos Dec Tck Mar Cmp','Hea Str Pas','Drops between the centre-backs in build-up.'],
+['ip','CM','Central Midfielder','CM DM','Pas Fir Tea Dec Wor','Tck Sta','Links play; all-round contributor.'],
+['ip','BBM','Box-to-Box Midfielder','CM DM','Sta Wor Pas Tck OtB','Lon Fin Pac','Covers ground at both ends.'],
+['ip','AP','Advanced Playmaker','CM AM AW WM','Pas Vis Tec Fir Cmp Dec','Fla Dri','Finds pockets and plays the killer pass.'],
+['ip','MP','Midfield Playmaker','CM DM','Pas Vis Fir Tec Dec Cmp','Tea OtB','Central hub who keeps the ball moving.'],
+['ip','BBP','Box-to-Box Playmaker','CM DM','Pas Sta Wor Vis Fir Dec','Tck OtB','Carries and passes the team up the pitch.'],
+['ip','WCM','Wide Central Midfielder','CM','Pas Cro Dri Sta OtB','Tec Wor','Covers wide areas from central midfield.'],
+['ip','AM','Attacking Midfielder','CM AM','OtB Fin Lon Ant Cmp','Pas Fir Dri','Arrives in the box from midfield.'],
+['ip','SS','Shadow Striker','AM','OtB Fin Ant Cmp Acc','Fir Dri','Plays off the striker and attacks space.'],
+['ip','WM','Wide Midfielder','WM','Cro Pas Sta Wor Tea','Dri Tck','Hard-working, balanced wide player.'],
+['ip','W','Winger','WM AW','Cro Dri Pac Acc Tec','Agi Fla','Hugs the line, beats his man, crosses.'],
+['ip','IW','Inside Winger','WM AW','Dri Pas Tec Vis Lon','Acc Fla','Cuts inside to create.'],
+['ip','IF','Inside Forward','AW','Fin Dri OtB Acc Cmp Tec','Pac Agi','Cuts inside to shoot and attack the box.'],
+['ip','PMW','Playmaking Winger','WM AW','Pas Vis Tec Fir Dec','Cmp Dri','Drifts inside to orchestrate.'],
+['ip','F9','False Nine','ST','Fir Pas Tec Vis Dec Dri','Cmp OtB Agi','Drops off the line to create.'],
+['ip','CF','Centre Forward','ST','Fin Fir Cmp OtB Hea','Str Pas Dri','Complete focal point.'],
+['ip','P','Poacher','ST','Fin OtB Ant Cmp Acc','Fir Hea','Lives on the shoulder and finishes chances.'],
+['ip','TF','Target Forward','ST','Hea Str Jum Bra Fir','Fin Tea Bal','Wins long balls and holds up play.'],
+['ip','DLF','Deep-Lying Forward','ST','Pas Fir Vis Tec Dec Cmp','Dri Fla Tea','Drops in to link play, false-nine style.'],
+['ip','CHF','Channel Forward','ST','OtB Pac Acc Sta Fin Wor','Dri Ant','Runs into the channels between defenders.'],
+['ip','WF','Wide Forward','ST AW','Dri Pac Fin Cro OtB','Acc Tec','Striker who drifts into wide areas.'],
+['oop','LHK','Line-Holding Keeper','GK','Ref Han Pos Cnt','Aer Cmd','Stays on his line.'],
+['oop','SK','Sweeper Keeper','GK','Rus 1v1 Acc Ant Cmp Dec','Ref Pas','Sweeps behind a high line.'],
+['oop','BCK','Box-Commanding Keeper','GK','Cmd Aer Com Han','Jum Bra','Dominates crosses and set pieces.'],
+['oop','CCB','Covering Centre-Back','CB','Pos Ant Pac Acc Cnt Dec','Tck','Drops off to cover the space behind.'],
+['oop','STP','Stopper','CB','Agg Tck Bra Str Ant','Hea Jum','Steps out aggressively to engage.'],
+['oop','MCB','Marking Centre-Back','CB','Mar Cnt Str Pac','Tck Agg Hea','Tracks his man tightly.'],
+['oop','WCC','Wide-Covering Centre-Back','CB','Pac Pos Tck Sta','Acc Ant','Covers the channel in a back three or five.'],
+['oop','HFB','Holding Full-Back','FB WB','Pos Mar Tck Cnt','Str Tea','Stays in the back line; low risk.'],
+['oop','PFB','Pressing Full-Back','FB WB','Wor Sta Agg Acc Ant','Tck','Jumps out to press the winger.'],
+['oop','TFB','Tucked-In Full-Back','FB WB','Pos Tck Mar Dec Cnt','Hea','Narrows to protect the box.'],
+['oop','SCR','Screening Midfielder','DM CM','Pos Ant Cnt Tck Tea','Dec','Screens passing lanes in front of the defence.'],
+['oop','PRM','Pressing Midfielder','DM CM AM','Wor Sta Agg Acc Ant Tea','Tck','Leaves the line to press.'],
+['oop','BWM','Ball-Winning Midfielder','DM CM','Tck Agg Wor Sta Ant Bra','Str','Hunts the ball and breaks up play.'],
+['oop','WCV','Wide-Covering Midfielder','DM CM','Sta Wor Pos Pac','Tck Tea','Shuffles across to cover the flank.'],
+['oop','TW','Tracking Winger','WM AW','Wor Sta Tck Pos Tea','Mar','Tracks back to double up on the full-back.'],
+['oop','PW','Pressing Winger','WM AW','Wor Acc Agg Sta Ant','Pac','Presses the opposing full-back high.'],
+['oop','OW','Outlet Winger','WM AW','Pac Acc OtB Ant','Cmp Dri','Stays high, ready to break.'],
+['oop','TAM','Tracking Attacking Midfielder','AM','Wor Pos Tea Mar Tck','Sta','Marks the opposition pivot.'],
+['oop','PAM','Pressing Attacking Midfielder','AM','Wor Agg Acc Sta Ant','Tea','Leads the press from the No.10 spot.'],
+['oop','OAM','Outlet Attacking Midfielder','AM','OtB Ant Pac Cmp','Dri','Stays forward to receive on the break.'],
+['oop','PF','Pressing Forward','ST','Wor Agg Sta Acc Ant Bra','Tea','Harries defenders and the keeper.'],
+['oop','TRF','Tracking Forward','ST','Wor Tea Pos Mar Sta','Ant','Drops to block the pivot.'],
+['oop','COF','Central Outlet Forward','ST','OtB Ant Pac Cmp','Str Fir','Stays high as the out-ball.']];
+const ROLES={};
+for(const [ph,id,name,gr,key,sec,desc] of R_RAW)ROLES[id]={id,ph,name,groups:gr.split(' '),key:key.split(' '),sec:sec.split(' '),desc};
+const rolesFor=(ph,g)=>Object.values(ROLES).filter(r=>r.ph===ph&&r.groups.includes(g));
+
+const B4=[['GK',50,5],['DL',12,26],['DCL',37,20],['DCR',63,20],['DR',88,26]];
+const B3=[['GK',50,5],['DCL',28,21],['DC',50,18],['DCR',72,21]];
+const F={
+'4-3-3':[...B4,['DM',50,38],['MCL',32,53],['MCR',68,53],['AML',14,76],['AMR',86,76],['ST',50,87]],
+'4-3-3 Flat':[...B4,['MCL',28,48],['MC',50,45],['MCR',72,48],['AML',14,76],['AMR',86,76],['ST',50,87]],
+'4-2-3-1':[...B4,['DML',38,38],['DMR',62,38],['AML',14,70],['AMC',50,66],['AMR',86,70],['ST',50,87]],
+'4-4-2':[...B4,['ML',12,52],['MCL',38,48],['MCR',62,48],['MR',88,52],['STL',40,82],['STR',60,82]],
+'4-4-1-1':[...B4,['ML',12,50],['MCL',38,46],['MCR',62,46],['MR',88,50],['AMC',50,66],['ST',50,85]],
+'4-1-4-1':[...B4,['DM',50,34],['ML',12,54],['MCL',36,54],['MCR',64,54],['MR',88,54],['ST',50,82]],
+'4-2-2-2':[...B4,['DML',38,40],['DMR',62,40],['AMCL',30,68],['AMCR',70,68],['STL',40,85],['STR',60,85]],
+'3-4-3':[...B3,['WBL',10,48],['MCL',38,46],['MCR',62,46],['WBR',90,48],['AML',18,76],['AMR',82,76],['ST',50,87]],
+'3-5-2':[...B3,['WBL',10,48],['DM',50,36],['MCL',33,54],['MCR',67,54],['WBR',90,48],['STL',40,84],['STR',60,84]],
+'3-2-5':[...B3,['DML',38,40],['DMR',62,40],['AML',8,80],['AMCL',33,72],['AMCR',67,72],['AMR',92,80],['ST',50,89]],
+'5-3-2':[['GK',50,5],['WBL',8,28],['DCL',30,19],['DC',50,17],['DCR',70,19],['WBR',92,28],['MCL',28,44],['MC',50,42],['MCR',72,44],['STL',40,72],['STR',60,72]],
+'5-4-1':[['GK',50,5],['WBL',8,26],['DCL',30,19],['DC',50,17],['DCR',70,19],['WBR',92,26],['ML',14,46],['MCL',38,44],['MCR',62,44],['MR',86,46],['ST',50,70]]};
+const FORMS=Object.keys(F);
+
+const TI={
+ ip:[['Approach','Play out of defence|Balanced|Bypass midfield',1],['Passing','Much shorter|Shorter|Standard|More direct|Much more direct',2],['Tempo','Much lower|Lower|Standard|Higher|Much higher',2],['Attacking width','Very narrow|Narrow|Standard|Wide|Very wide',2],['Creative freedom','Disciplined|Balanced|Expressive',1],['Final third','Work ball into box|Mixed|Shoot on sight|Cross often',1],['On transition','Hold shape|Mixed|Counter',1],['GK distribution','Short to defenders|Mixed|Long to forwards',1]],
+ oop:[['Block','Low block|Mid block|High block',1],['Defensive line','Much lower|Lower|Standard|Higher|Much higher',2],['Line of engagement','Much lower|Lower|Standard|Higher|Much higher',2],['Pressing intensity','Much lower|Lower|Standard|Higher|Much higher',2],['Pressing trap','None|Force inside|Force outside',0],['Tackling','Stay on feet|Standard|Get stuck in',1],['Counter-press','Regroup|Mixed|Counter-press',1],['Offside trap','Off|On',0],['Defensive width','Narrow|Standard|Wide',1]]};
+const defaultTI=()=>({ip:Object.fromEntries(TI.ip.map(t=>[t[0],t[2]])),oop:Object.fromEntries(TI.oop.map(t=>[t[0],t[2]]))});
+
+/* ---------- Scoring ---------- */
+const CODE_RATING={GK:'gk',DCL:'dc',DC:'dc',DCR:'dc',DL:'dl',DR:'dr',WBL:'wbl',WBR:'wbr',DML:'dm',DM:'dm',DMR:'dm',MCL:'mc',MC:'mc',MCR:'mc',ML:'ml',MR:'mr',AML:'aml',AMR:'amr',AMCL:'amc',AMC:'amc',AMCR:'amc',STL:'stc',ST:'stc',STR:'stc'};
+const grp=g=>GROUPS[g]?g:POS_GROUP[g];
+function posFactor(p,g){
+  if(!GROUPS[g]){const k=CODE_RATING[g];if(p.ratings&&k&&p.ratings[k]!=null){const r=p.ratings[k];return r>=18?1:r>=15?.95:r>=12?.85:r>=9?.75:r>=5?.6:.4}g=POS_GROUP[g]}
+  if(!p.pos||!p.pos.length)return 1;
+  if(p.pos.includes(g))return 1;
+  if(g==='GK'||(p.pos.length===1&&p.pos[0]==='GK'))return .3;
+  if(p.pos.some(x=>RELATED[g].includes(x)))return .85;
+  return .65;
+}
+function baseScore(p,r){let s=0,w=0;for(const a of r.key){s+=2*(p.attrs[a]??10);w+=2}for(const a of r.sec){s+=(p.attrs[a]??10);w+=1}return s/w/20*100}
+function roleScore(p,roleId,g){const r=ROLES[roleId];if(!p||!r)return null;return Math.round(baseScore(p,r)*posFactor(p,g))}
+const cls=v=>v==null?'n':v>=72?'g':v>=60?'o':'b';
+const scoreTag=v=>`<span class="score ${cls(v)}">${v==null?'–':v}</span>`;
+function bestRole(p,ph,g){let best=null,bs=-1;for(const r of rolesFor(ph,grp(g))){const s=roleScore(p,r.id,g);if(s>bs){bs=s;best=r.id}}return{id:best,score:bs}}
+
+/* ---------- Hungarian (min cost, n<=m) ---------- */
+function hungarian(a){
+  const n=a.length,m=a[0].length,INF=1e18;
+  const u=Array(n+1).fill(0),v=Array(m+1).fill(0),p=Array(m+1).fill(0),way=Array(m+1).fill(0);
+  for(let i=1;i<=n;i++){
+    p[0]=i;let j0=0;const minv=Array(m+1).fill(INF),used=Array(m+1).fill(false);
+    do{used[j0]=true;const i0=p[j0];let delta=INF,j1=0;
+      for(let j=1;j<=m;j++)if(!used[j]){const cur=a[i0-1][j-1]-u[i0]-v[j];if(cur<minv[j]){minv[j]=cur;way[j]=j0}if(minv[j]<delta){delta=minv[j];j1=j}}
+      for(let j=0;j<=m;j++){if(used[j]){u[p[j]]+=delta;v[j]-=delta}else minv[j]-=delta}
+      j0=j1;}while(p[j0]!==0);
+    do{const j1=way[j0];p[j0]=p[j1];j0=j1}while(j0);
+  }
+  const res=Array(n).fill(-1);for(let j=1;j<=m;j++)if(p[j])res[p[j]-1]=j-1;return res;
+}
+const dist=(a,b)=>Math.hypot(a[1]-b[1],a[2]-b[2]);
+
+/* ---------- Tactic helpers ---------- */
+const ipSlot=(t,i)=>F[t.ip][i];
+const oopSlot=(t,i)=>F[t.oop][t.slots[i].oopIdx];
+const ipGroup=(t,i)=>POS_GROUP[ipSlot(t,i)[0]];
+const ipCode=(t,i)=>ipSlot(t,i)[0],oopCode=(t,i)=>oopSlot(t,i)[0];
+const oopGroup=(t,i)=>POS_GROUP[oopSlot(t,i)[0]];
+function fixRoles(t){t.slots.forEach((s,i)=>{
+  const gi=ipGroup(t,i),go=oopGroup(t,i);
+  if(!ROLES[s.ipRole]||!ROLES[s.ipRole].groups.includes(gi)||ROLES[s.ipRole].ph!=='ip')s.ipRole=rolesFor('ip',gi)[0].id;
+  if(!ROLES[s.oopRole]||!ROLES[s.oopRole].groups.includes(go)||ROLES[s.oopRole].ph!=='oop')s.oopRole=rolesFor('oop',go)[0].id;})}
+function remapOOP(t){const A=F[t.ip],B=F[t.oop];const as=hungarian(A.map(a=>B.map(b=>dist(a,b))));t.slots.forEach((s,i)=>s.oopIdx=as[i]);fixRoles(t)}
+function newTactic(name,ip,oop){const t={id:uid(),name,ip,oop,slots:F[ip].map(()=>({player:null,ipRole:null,oopRole:null,oopIdx:0})),ti:defaultTI()};remapOOP(t);return t}
+function setIPForm(t,f){const old=t.slots.map((s,i)=>({...s,c:ipSlot(t,i)}));const B=F[f];const as=hungarian(B.map(b=>old.map(o=>dist(b,o.c))));
+  t.ip=f;t.slots=B.map((b,i)=>{const o=old[as[i]];return{player:o.player,ipRole:o.ipRole,oopRole:o.oopRole,oopIdx:0}});remapOOP(t)}
+function setOOPForm(t,f){t.oop=f;remapOOP(t)}
+const player=id=>S.squad.find(p=>p.id===id);
+const T=()=>S.tactics.find(t=>t.id===S.cur)||S.tactics[0];
+function slotScores(t,i){const p=player(t.slots[i].player);if(!p)return{ip:null,oop:null,all:null};const ip=roleScore(p,t.slots[i].ipRole,ipCode(t,i)),oop=roleScore(p,t.slots[i].oopRole,oopCode(t,i));return{ip,oop,all:Math.round(.6*ip+.4*oop)}}
+function teamFit(t){const v=t.slots.map((_,i)=>slotScores(t,i).all).filter(x=>x!=null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null}
+function assignPlayer(t,i,pid){if(pid){const j=t.slots.findIndex(s=>s.player===pid);if(j>=0&&j!==i)t.slots[j].player=t.slots[i].player}t.slots[i].player=pid||null}
+
+function autoPick(t,keepRoles){
+  const ps=S.squad;if(!ps.length)return toast('Add players to your squad first');
+  const n=t.slots.length,m=Math.max(ps.length,n);
+  const best=[];
+  const cost=t.slots.map((s,i)=>{const gi=ipCode(t,i),go=oopCode(t,i);best[i]=[];
+    return Array.from({length:m},(_,j)=>{const p=ps[j];if(!p)return 0;
+      let ri,ro;if(keepRoles){ri={id:s.ipRole,score:roleScore(p,s.ipRole,gi)};ro={id:s.oopRole,score:roleScore(p,s.oopRole,go)}}else{ri=bestRole(p,'ip',gi);ro=bestRole(p,'oop',go)}
+      best[i][j]=[ri.id,ro.id];return -(.6*ri.score+.4*ro.score)})});
+  const as=hungarian(cost);
+  t.slots.forEach((s,i)=>{const j=as[i];const p=ps[j];s.player=p?p.id:null;if(p&&!keepRoles){s.ipRole=best[i][j][0];s.oopRole=best[i][j][1]}});
+  persist();render();toast(keepRoles?'Best XI picked for your roles':'Best XI and roles picked');
+}
+function bestRolesForXI(t){let c=0;t.slots.forEach((s,i)=>{const p=player(s.player);if(!p)return;s.ipRole=bestRole(p,'ip',ipCode(t,i)).id;s.oopRole=bestRole(p,'oop',oopCode(t,i)).id;c++});if(!c)return toast('No players on the board yet');persist();render();toast('Roles set to best fit')}
+
+/* ---------- State ---------- */
+let S,ui={tab:'board',phase:'ip',chat:[],busy:false};
+function defaultState(){const t=newTactic('My 4-3-3','4-3-3','4-1-4-1');return{v:1,squad:[],tactics:[t],cur:t.id,savedAt:0,cloudAt:0}}
+function validState(s){return s&&Array.isArray(s.squad)&&Array.isArray(s.tactics)&&s.tactics.length&&s.tactics.every(t=>F[t.ip]&&F[t.oop]&&t.slots&&t.slots.length===F[t.ip].length)}
+function load(){let emb=null,loc=null;try{emb=JSON.parse($('#saved-state').textContent)}catch(e){}try{loc=JSON.parse(localStorage.getItem('fm27lab')||'null')}catch(e){}
+  let s=(validState(loc)&&(!validState(emb)||loc.savedAt>=emb.savedAt))?loc:emb;if(!validState(s))s=defaultState();
+  s.tactics.forEach(t=>{t.ti=t.ti||defaultTI();fixRoles(t)});if(!s.tactics.find(t=>t.id===s.cur))s.cur=s.tactics[0].id;return s}
+let cloudDirty=false;
+function persist(){S.savedAt=Date.now();try{localStorage.setItem('fm27lab',JSON.stringify(S))}catch(e){}cloudDirty=true;updateSaveBtn()}
+let ART=null,SAMPLE=null;
+function updateSaveBtn(){const b=$('#saveBtn');if(!ART){b.style.display='none';return}b.style.display='';b.textContent=cloudDirty?'Save':'Saved';b.classList.toggle('acc',cloudDirty)}
+async function cloudSave(){if(!ART)return;if(!cloudDirty)return toast('Everything is saved');
+  S.cloudAt=Date.now();S.savedAt=S.cloudAt;try{localStorage.setItem('fm27lab',JSON.stringify(S))}catch(e){}
+  const json=JSON.stringify(S).replace(/</g,'\\u003c');
+  const body=OWN_BODY.replace(/(<script id="saved-state"[^>]*>)[\s\S]*?(<\/script>)/,(m,a,b)=>a+json+b);
+  const html='<!DOCTYPE html>\n<html lang="en">\n<head>\n'+OWN_HEAD+'\n</head>\n<body>\n'+body+'\n</body>\n</html>';
+  try{toast('Saving…');await ART.publish(html)}catch(e){if(e&&e.code==='conflict')toast('Saved from another view — reloaded');else if(e&&(e.code==='not_granted'||e.code==='not_writer'))toast('Read-only view: saved on this device only');else toast('Save failed: '+(e&&e.message||'unknown'))}}
+
+/* ---------- UI helpers ---------- */
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)}
+function openSheet(html,onMount){const s=$('#sheet');s.innerHTML=html;s.classList.add('on');$('#sheetBg').classList.add('on');s.scrollTop=0;onMount&&onMount(s)}
+function closeSheet(){$('#sheet').classList.remove('on');$('#sheetBg').classList.remove('on')}
+$('#sheetBg').onclick=closeSheet;
+function dialog(title,bodyHtml,okLabel,onOk){openSheet(`<h3>${esc(title)}</h3>${bodyHtml}<div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn ghost" data-x>Cancel</button><button class="btn acc" data-ok>${esc(okLabel)}</button></div>`,s=>{$('[data-x]',s).onclick=closeSheet;$('[data-ok]',s).onclick=()=>{if(onOk(s)!==false)closeSheet()};const i=$('input',s);i&&i.focus()})}
+const short=n=>{const parts=String(n||'').trim().split(/\s+/);return parts.length>1?parts[parts.length-1]:parts[0]||''};
+
+/* ---------- Render ---------- */
+function render(){renderHeader();({board:renderBoard,squad:renderSquad,fit:renderFit,ai:renderAI})[ui.tab]()}
+function renderHeader(){const sel=$('#tacticSel');sel.innerHTML=S.tactics.map(t=>`<option value="${t.id}"${t.id===S.cur?' selected':''}>${esc(t.name)}</option>`).join('')}
+$('#tacticSel').onchange=e=>{S.cur=e.target.value;persist();render()};
+$('#saveBtn').onclick=cloudSave;
+$$('nav.tabs button').forEach(b=>b.onclick=()=>{ui.tab=b.dataset.tab;$$('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));$$('main section').forEach(s=>s.classList.toggle('on',s.id==='tab-'+ui.tab));render();window.scrollTo(0,0)});
+$('#tacMenuBtn').onclick=()=>{const t=T();openSheet(`<h3>Tactic: ${esc(t.name)}</h3><div class="roleList">
+  <button class="btn" data-a="new">New tactic</button><button class="btn" data-a="dup">Duplicate</button><button class="btn" data-a="ren">Rename</button>
+  <button class="btn" data-a="exp">Export all (copy JSON)</button><button class="btn" data-a="imp">Import JSON</button>
+  <button class="btn danger" data-a="del"${S.tactics.length<2?' disabled':''}>Delete this tactic</button></div>
+  <p class="small mut" style="margin-top:12px">${ART?'Changes save on this device automatically. Tap <b>Save</b> to keep them in the page itself, so they follow you to other devices.':'Changes save on this device automatically.'}</p>`,s=>{
+  $$('[data-a]',s).forEach(b=>b.onclick=()=>{const a=b.dataset.a;
+   if(a==='new')dialog('New tactic',`<label class="f">Name<input class="in" value="New tactic"></label>`,'Create',s2=>{const nt=newTactic($('input',s2).value.trim()||'New tactic','4-3-3','4-1-4-1');S.tactics.push(nt);S.cur=nt.id;persist();render()});
+   if(a==='dup'){const nt=JSON.parse(JSON.stringify(t));nt.id=uid();nt.name=t.name+' (copy)';S.tactics.push(nt);S.cur=nt.id;persist();render();closeSheet();toast('Duplicated')}
+   if(a==='ren')dialog('Rename tactic',`<label class="f">Name<input class="in" value="${esc(t.name)}"></label>`,'Rename',s2=>{t.name=$('input',s2).value.trim()||t.name;persist();render()});
+   if(a==='del')dialog('Delete tactic?',`<p>Delete “${esc(t.name)}”? This can't be undone.</p>`,'Delete',()=>{S.tactics=S.tactics.filter(x=>x.id!==t.id);S.cur=S.tactics[0].id;persist();render()});
+   if(a==='exp'){const txt=JSON.stringify({squad:S.squad,tactics:S.tactics});navigator.clipboard.writeText(txt).then(()=>toast('Copied to clipboard'),()=>dialog('Copy this JSON',`<textarea class="in" rows="8">${esc(txt)}</textarea>`,'Done',()=>{}))}
+   if(a==='imp')dialog('Import JSON',`<p class="small mut">Paste an export. It replaces your squad and tactics.</p><textarea class="in" rows="8"></textarea>`,'Import',s2=>{try{const d=JSON.parse($('textarea',s2).value);const ns={...S,squad:d.squad||[],tactics:d.tactics||[]};if(!validState(ns))throw 0;ns.cur=ns.tactics[0].id;S=ns;S.tactics.forEach(fixRoles);persist();render();toast('Imported')}catch(e){toast('That JSON could not be read');return false}});
+  })})};
+
+function pitchSVG(t){
+  const X=x=>x*.68,Y=y=>105-y*1.05;const ph=ui.phase;
+  let g=`<rect width="68" height="105" fill="${'var(--pitchA)'}"/>`;
+  for(let k=0;k<7;k++)g+=`<rect x="0" y="${k*15}" width="68" height="7.5" fill="var(--pitchB)"/>`;
+  const L='stroke="rgba(255,255,255,.55)" stroke-width=".35" fill="none"';
+  g+=`<rect x="1.5" y="1.5" width="65" height="102" ${L}/><line x1="1.5" y1="52.5" x2="66.5" y2="52.5" ${L}/><circle cx="34" cy="52.5" r="9.15" ${L}/>
+  <rect x="13.84" y="1.5" width="40.32" height="16.5" ${L}/><rect x="24.84" y="1.5" width="18.32" height="5.5" ${L}/>
+  <rect x="13.84" y="87" width="40.32" height="16.5" ${L}/><rect x="24.84" y="98" width="18.32" height="5.5" ${L}/>`;
+  g+=`<text x="34" y="5" text-anchor="middle" font-size="2.4" fill="rgba(255,255,255,.5)" font-family="Barlow Condensed,sans-serif">▲ ATTACK</text>`;
+  if(ph==='both')t.slots.forEach((s,i)=>{const a=ipSlot(t,i),b=oopSlot(t,i);g+=`<line x1="${X(b[1])}" y1="${Y(b[2])}" x2="${X(a[1])}" y2="${Y(a[2])}" stroke="rgba(200,244,58,.6)" stroke-width=".45" stroke-dasharray="1 .8"/><circle cx="${X(b[1])}" cy="${Y(b[2])}" r="2.2" fill="rgba(11,19,16,.55)" stroke="rgba(255,255,255,.6)" stroke-width=".3"/>`});
+  t.slots.forEach((s,i)=>{const c=ph==='oop'?oopSlot(t,i):ipSlot(t,i);const p=player(s.player);const sc=slotScores(t,i);const v=ph==='oop'?sc.oop:ph==='ip'?sc.ip:sc.all;
+    const fill={g:'#4ade80',o:'#f5b942',b:'#f06161',n:'#e8f0eb'}[cls(v)];const role=ph==='oop'?s.oopRole:s.ipRole;const x=X(c[1]),y=Y(c[2]);
+    g+=`<g class="pl" data-slot="${i}"><circle cx="${x}" cy="${y}" r="3.9" fill="#0b1310" stroke="${fill}" stroke-width=".8"/>
+    <text x="${x}" y="${y+.8}" text-anchor="middle" font-size="${role.length>3?1.9:2.3}" font-weight="700" fill="${fill}" font-family="Barlow Condensed,sans-serif">${esc(ph==='both'?c[0]:role)}</text>
+    <rect x="${x-7}" y="${y+4.6}" width="14" height="3.3" rx="1.6" fill="rgba(11,19,16,.75)"/>
+    <text x="${x}" y="${y+7.05}" text-anchor="middle" font-size="2.3" fill="#fff" font-family="Barlow,sans-serif">${esc(p?short(p.name).slice(0,12):'+ player')}</text></g>`});
+  return `<svg class="pitch" viewBox="0 0 68 105" role="img" aria-label="Pitch">${g}</svg>`;
+}
+
+function renderBoard(){
+  const t=T(),el=$('#tab-board'),fit=teamFit(t);
+  el.innerHTML=`<div class="card">
+   <div class="row"><label class="f">In-possession shape<select class="in" id="ipF">${FORMS.map(f=>`<option${f===t.ip?' selected':''}>${f}</option>`).join('')}</select></label>
+   <label class="f">Out-of-possession shape<select class="in" id="oopF">${FORMS.map(f=>`<option${f===t.oop?' selected':''}>${f}</option>`).join('')}</select></label></div>
+   <div class="row" style="margin-top:10px"><div class="seg grow">${[['ip','In possession'],['oop','Out of possession'],['both','Transition']].map(([k,l])=>`<button data-ph="${k}" class="${ui.phase===k?'on':''}">${l}</button>`).join('')}</div>
+   <div title="Team fit">${scoreTag(fit)}</div></div>
+   <div class="pitchWrap">${pitchSVG(t)}</div>
+   <div class="legend"><span><i class="dot" style="background:var(--good)"></i>72+ great fit</span><span><i class="dot" style="background:var(--ok)"></i>60–71 OK</span><span><i class="dot" style="background:var(--bad)"></i>&lt;60 poor</span>${ui.phase==='both'?'<span>Dashed: out-of-possession spot → in-possession spot</span>':''}</div>
+   <div class="row" style="margin-top:10px"><button class="btn sm" id="autoBtn">Auto-pick XI + roles</button><button class="btn sm" id="autoKeepBtn">Auto-pick XI (keep roles)</button><button class="btn sm" id="rolesBtn">Best roles for XI</button></div>
+  </div>
+  <div class="card slots"><h3>Line-up</h3>${t.slots.map((s,i)=>{const p=player(s.player),sc=slotScores(t,i);return `<div class="s" data-slot="${i}"><div class="pos">${ipSlot(t,i)[0]}</div>
+   <div><div>${p?esc(p.name):'<span class="mut">Empty: tap to pick</span>'}</div><div class="small mut">${ROLES[s.ipRole].name} · <span title="Out of possession">${oopSlot(t,i)[0]}: ${ROLES[s.oopRole].name}</span></div></div>${scoreTag(sc.all)}</div>`}).join('')}</div>
+  <div class="card"><details${ui.tiOpen?' open':''} id="tiD"><summary>Team instructions</summary>
+   ${['ip','oop'].map(ph=>`<h4>${ph==='ip'?'In possession':'Out of possession'}</h4><div class="ti">${TI[ph].map(([k,opts])=>`<label class="f">${k}<select class="in" data-ti="${ph}|${k}">${opts.split('|').map((o,j)=>`<option value="${j}"${t.ti[ph][k]===j?' selected':''}>${o}</option>`).join('')}</select></label>`).join('')}</div>`).join('')}
+   <p class="small mut">Names approximate FM's wording. Match them to the in-game options.</p></details></div>`;
+  $('#ipF',el).onchange=e=>{setIPForm(t,e.target.value);persist();render()};
+  $('#oopF',el).onchange=e=>{setOOPForm(t,e.target.value);persist();render()};
+  $$('[data-ph]',el).forEach(b=>b.onclick=()=>{ui.phase=b.dataset.ph;renderBoard()});
+  $$('[data-slot]',el).forEach(b=>b.onclick=()=>openSlot(+b.dataset.slot));
+  $$('[data-ti]',el).forEach(s=>s.onchange=()=>{const [ph,k]=s.dataset.ti.split('|');t.ti[ph][k]=+s.value;persist()});
+  $('#tiD',el).ontoggle=e=>ui.tiOpen=e.target.open;
+  $('#autoBtn',el).onclick=()=>autoPick(t,false);$('#autoKeepBtn',el).onclick=()=>autoPick(t,true);$('#rolesBtn',el).onclick=()=>bestRolesForXI(t);
+}
+
+function openSlot(i){
+  const t=T(),s=t.slots[i],gi=ipGroup(t,i),go=oopGroup(t,i),ci=ipCode(t,i),co=oopCode(t,i),p=player(s.player);
+  const opts=S.squad.map(q=>{const a=bestRole(q,'ip',ci).score,b=bestRole(q,'oop',co).score;return{q,v:Math.round(.6*a+.4*b)}}).sort((a,b)=>b.v-a.v);
+  const roleBtns=(ph,g,cur)=>rolesFor(ph,grp(g)).map(r=>{const v=p?roleScore(p,r.id,g):null;return `<button class="role${r.id===cur?' on':''}" data-r="${ph}|${r.id}"><b>${r.id}</b><span><span style="font-weight:600">${r.name}</span><br><span class="small mut">${r.desc}</span></span>${scoreTag(v)}</button>`}).join('');
+  openSheet(`<div class="row" style="justify-content:space-between"><h3 style="margin:0">${ipSlot(t,i)[0]} <span class="mut" style="font-weight:500">· ${GROUP_LABEL[gi]}</span></h3><button class="btn sm ghost" data-x>Done</button></div>
+   <label class="f" style="margin-top:10px">Player (sorted by fit for this slot)<select class="in" id="slotP"><option value="">— Empty —</option>${opts.map(({q,v})=>`<option value="${q.id}"${q.id===s.player?' selected':''}>${esc(q.name)} · ${v}${t.slots.some((x,j)=>j!==i&&x.player===q.id)?' (on pitch)':''}</option>`).join('')}</select></label>
+   ${!S.squad.length?'<p class="small mut">Your squad is empty. Add players in the Squad tab, or load the demo squad.</p>':''}
+   <h4>In-possession role</h4><div class="roleList">${roleBtns('ip',ci,s.ipRole)}</div>
+   <h4>Out-of-possession spot &amp; role</h4>
+   <label class="f">Spot in ${t.oop}<select class="in" id="slotO">${F[t.oop].map((c,j)=>{const k=t.slots.findIndex(x=>x.oopIdx===j);const who=player(t.slots[k].player);return `<option value="${j}"${j===s.oopIdx?' selected':''}>${c[0]}${k!==i?' (swap with '+(who?esc(short(who.name)):ipSlot(t,k)[0])+')':''}</option>`}).join('')}</select></label>
+   <div class="roleList" style="margin-top:8px">${roleBtns('oop',co,s.oopRole)}</div>`,el=>{
+    $('[data-x]',el).onclick=closeSheet;
+    $('#slotP',el).onchange=e=>{assignPlayer(t,i,e.target.value);persist();render();openSlot(i)};
+    $('#slotO',el).onchange=e=>{const j=+e.target.value,k=t.slots.findIndex(x=>x.oopIdx===j);t.slots[k].oopIdx=s.oopIdx;s.oopIdx=j;fixRoles(t);persist();render();openSlot(i)};
+    $$('[data-r]',el).forEach(b=>b.onclick=()=>{const [ph,id]=b.dataset.r.split('|');if(ph==='ip')s.ipRole=id;else s.oopRole=id;persist();render();openSlot(i)});
+  });
+}
+
+/* ---------- Squad ---------- */
+function topRoles(p,ph,n){const out=[];for(const g of (p.pos&&p.pos.length?p.pos:Object.keys(GROUPS)))for(const r of rolesFor(ph,g)){const v=roleScore(p,r.id,g);const ex=out.find(o=>o.id===r.id);if(!ex)out.push({id:r.id,g,v});else if(v>ex.v){ex.v=v;ex.g=g}}return out.sort((a,b)=>b.v-a.v).slice(0,n)}
+function renderSquad(){
+  const el=$('#tab-squad');
+  el.innerHTML=`<div class="card"><div class="row"><h3 class="grow" style="margin:0">Squad <span class="mut">(${S.squad.length})</span></h3>
+   <button class="btn sm acc" id="addP">+ Player</button></div>
+   <div class="row" style="margin-top:10px">${LOCAL?'<button class="btn sm acc" id="saveP">⚽ Load from FM save</button>'+(S.lastSave?'<button class="btn sm" id="refreshP">↻ Refresh from save</button>':''):''}<button class="btn sm" id="fileP">📄 Load squad file</button><button class="btn sm" id="pasteP">Paste table</button>${SAMPLE?'<button class="btn sm" id="shotP">📷 Import from screenshots</button>':''}<button class="btn sm" id="demoP">Load demo squad</button>${S.squad.length?'<button class="btn sm danger" id="clrP">Clear</button>':''}</div>
+   ${SAMPLE?'<p class="small mut" style="margin:8px 0 0">Screenshot import: snap an FM player profile and Claude reads the attributes for you.</p>':''}</div>
+   <div class="card plist">${S.squad.length?S.squad.map(p=>{const ti=topRoles(p,'ip',1)[0],to=topRoles(p,'oop',1)[0];return `<div class="p" data-p="${p.id}"><div class="grow"><div style="font-weight:600">${esc(p.name)}${p.age?` <span class="small mut" style="font-weight:400">${p.age}y${p.ca?` · CA ${p.ca}${p.pa?'/'+p.pa:''}`:''}</span>`:''}</div><div>${(p.pos||[]).map(g=>`<span class="chip">${g}</span>`).join('')||'<span class="small mut">No positions set</span>'}</div></div>
+    <div class="small" style="text-align:right">${ti?`${ti.id} ${scoreTag(ti.v)}`:''}<div style="margin-top:3px">${to?`${to.id} ${scoreTag(to.v)}`:''}</div></div></div>`}).join(''):'<div class="empty">No players yet. Add your squad, import screenshots, or load the demo squad to try things out.</div>'}</div>
+   <p class="small mut">In-possession roles match FM27's names. Out-of-possession roles are approximate. Scores weigh each role's key attributes, adjusted for position familiarity.</p>`;
+  $('#addP',el).onclick=()=>{const p={id:uid(),name:'New player',pos:[],attrs:Object.fromEntries(ALL_ATTRS.map(a=>[a,10]))};S.squad.push(p);persist();renderSquad();editPlayer(p.id)};
+  $('#demoP',el).onclick=()=>{const add=()=>{S.squad=demoSquad();persist();renderSquad();toast('Demo squad loaded')};S.squad.length?dialog('Replace squad?','<p>Loading the demo replaces your current squad.</p>','Replace',add):add()};
+  const c=$('#clrP',el);c&&(c.onclick=()=>dialog('Clear squad?','<p>Remove every player? Line-ups will be emptied.</p>','Clear',()=>{S.squad=[];S.tactics.forEach(t=>t.slots.forEach(s=>s.player=null));persist();renderSquad()}));
+  const sh=$('#shotP',el);sh&&(sh.onclick=importShots);
+  $('#fileP',el).onclick=importFile;
+  const sv=$('#saveP',el);sv&&(sv.onclick=pickSave);const rf=$('#refreshP',el);rf&&(rf.onclick=()=>readSave(S.lastSave,true));
+  $('#pasteP',el).onclick=()=>dialog('Paste a table',`<p class="small mut">Copy the rows from a CSV or spreadsheet (header row included) and paste them here.</p><textarea class="in" rows="8" id="pasteT"></textarea>`,'Read',s=>{const r=parseText($('#pasteT',s).value);if(!r.players.length){toast('No players found: is the header row included?');return false}setTimeout(()=>previewImport(r,'pasted table'),50)});
+  $$('[data-p]',el).forEach(r=>r.onclick=()=>editPlayer(r.dataset.p));
+}
+function editPlayer(id){
+  const p=player(id);if(!p)return;
+  const draw=()=>{const ti=topRoles(p,'ip',5),to=topRoles(p,'oop',4);
+   openSheet(`<div class="row"><input class="in grow" id="pName" value="${esc(p.name)}" style="font-weight:700;font-size:17px"><button class="btn sm ghost" data-x>Done</button></div>
+   <h4>Natural positions</h4><div>${Object.keys(GROUPS).map(g=>`<button class="chip${(p.pos||[]).includes(g)?' on':''}" data-g="${g}" style="cursor:pointer">${g} · ${GROUP_LABEL[g]}</button>`).join('')}</div>
+   <h4>Best roles</h4><div class="row small" style="align-items:flex-start"><div class="grow"><div class="mut">In possession</div>${ti.map(r=>`<div>${scoreTag(r.v)} ${ROLES[r.id].name} <span class="mut">(${r.g})</span></div>`).join('')}</div>
+   <div class="grow"><div class="mut">Out of possession</div>${to.map(r=>`<div>${scoreTag(r.v)} ${ROLES[r.id].name} <span class="mut">(${r.g})</span></div>`).join('')}</div></div>
+   ${ATTR_GROUPS.map(([gn,as])=>`<h4>${gn}</h4><div class="attrs">${as.map(a=>`<label class="attr" title="${ATTR_NAME[a]}">${a}<input type="number" inputmode="numeric" min="1" max="20" data-a="${a}" value="${p.attrs[a]??10}"></label>`).join('')}</div>`).join('')}
+   <div class="row" style="margin-top:14px;justify-content:space-between"><button class="btn sm danger" id="delP">Delete player</button><button class="btn acc" data-x>Done</button></div>`,el=>{
+    $$('[data-x]',el).forEach(b=>b.onclick=()=>{closeSheet();render()});
+    $('#pName',el).onchange=e=>{p.name=e.target.value.trim()||p.name;persist()};
+    $$('[data-g]',el).forEach(b=>b.onclick=()=>{const g=b.dataset.g;p.pos=p.pos||[];p.pos=p.pos.includes(g)?p.pos.filter(x=>x!==g):[...p.pos,g];persist();const st=$('#sheet').scrollTop;draw();$('#sheet').scrollTop=st});
+    $$('[data-a]',el).forEach(i=>i.onchange=()=>{let v=Math.round(+i.value);if(!(v>=1))v=1;if(v>20)v=20;i.value=v;p.attrs[i.dataset.a]=v;persist()});
+    $('#delP',el).onclick=()=>dialog('Delete player?',`<p>Remove ${esc(p.name)} from the squad?</p>`,'Delete',()=>{S.squad=S.squad.filter(x=>x.id!==p.id);S.tactics.forEach(t=>t.slots.forEach(s=>{if(s.player===p.id)s.player=null}));persist();render()});
+   })};
+  draw();
+}
+function demoSquad(){
+  let seed=27;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+  const mk=(name,pos,roles,lvl)=>{const attrs={};for(const a of ALL_ATTRS)attrs[a]=Math.round(6+rnd()*6+(lvl-12)*.4);
+    for(const r of roles){for(const a of ROLES[r].key)attrs[a]=Math.max(attrs[a],Math.round(lvl+rnd()*4-1));for(const a of ROLES[r].sec)attrs[a]=Math.max(attrs[a],Math.round(lvl-2+rnd()*3))}
+    if(!pos.includes('GK'))for(const a of ['Aer','Cmd','Com','Han','Kic','1v1','Ref','Rus'])attrs[a]=Math.round(1+rnd()*3);
+    for(const a in attrs)attrs[a]=Math.max(1,Math.min(20,attrs[a]));return{id:uid(),name,pos,attrs}};
+  return[mk('Bram Kooistra',['GK'],['BPGK','SK'],14),mk('Teun Hartsink',['GK'],['GK','LHK'],12),
+   mk('Lucas Verbeek',['CB'],['BPCB','CCB'],15),mk('Daan Oosting',['CB'],['NNCB','STP'],14),mk('Milan de Jongh',['CB','FB'],['CB','MCB'],12),
+   mk('Ruben Smeets',['FB','WB'],['OFB','PFB'],14),mk('Jesse Wiersma',['FB'],['IFB','HFB'],13),mk('Noah Brinkman',['WB','WM'],['WB','CWB','TW'],13),
+   mk('Sem Hofstede',['DM','CM'],['DLP','SCR'],15),mk('Finn Akkerman',['DM'],['DM','BWM'],13),mk('Thijs Mulder',['CM'],['BBM','PRM'],14),mk('Jasper Rozema',['CM','AM'],['AP','AM'],15),
+   mk('Levi Dijkstra',['AW','WM'],['W','PW'],14),mk('Owen Bakker',['AW','ST'],['IF','OW'],15),mk('Gijs van Til',['AM','AW'],['SS','PAM','IW'],13),
+   mk('Mats Ter Horst',['ST'],['CF','PF'],15),mk('Koen Veenstra',['ST'],['TF','COF'],13),mk('Sven Lubbers',['ST','AW'],['CHF','P'],12)];
+}
+
+/* ---------- Fit matrix ---------- */
+function renderFit(){
+  const t=T(),el=$('#tab-fit');
+  if(!S.squad.length){el.innerHTML=`<div class="card empty">Add players in the Squad tab to see how they fit this tactic.</div>`;return}
+  const rows=S.squad.map(p=>({p,v:t.slots.map((s,i)=>Math.round(.6*roleScore(p,s.ipRole,ipCode(t,i))+.4*roleScore(p,s.oopRole,oopCode(t,i))))})).sort((a,b)=>Math.max(...b.v)-Math.max(...a.v));
+  el.innerHTML=`<div class="card"><h3>Squad fit: ${esc(t.name)}</h3><p class="small mut" style="margin-top:0">Each cell is a player's fit for that slot's two roles (60% in possession, 40% out). Tap a cell to put the player there.</p>
+   <div class="row" style="margin-bottom:10px"><button class="btn sm acc" id="fAuto">Auto-pick XI + roles</button><button class="btn sm" id="fKeep">Auto-pick XI (keep roles)</button></div>
+   <div class="matrix"><table><thead><tr><th>Player</th>${t.slots.map((s,i)=>`<th>${ipSlot(t,i)[0]}<br><span class="mut" style="font-weight:500;font-size:11px">${s.ipRole}/${s.oopRole}</span></th>`).join('')}</tr></thead>
+   <tbody>${rows.map(({p,v})=>`<tr><td title="${esc(p.name)}">${esc(p.name)}</td>${v.map((x,i)=>`<td class="${t.slots[i].player===p.id?'cur':''}"><span class="score ${cls(x)}" data-c="${p.id}|${i}">${x}</span></td>`).join('')}</tr>`).join('')}</tbody></table></div>
+   <p class="small mut" style="margin-bottom:0">Outlined = current pick. Team fit: ${scoreTag(teamFit(t))}</p></div>`;
+  $$('[data-c]',el).forEach(c=>c.onclick=()=>{const [pid,i]=c.dataset.c.split('|');assignPlayer(t,+i,pid);persist();renderFit();toast(`${player(pid).name} → ${ipSlot(t,+i)[0]}`)});
+  $('#fAuto',el).onclick=()=>autoPick(t,false);$('#fKeep',el).onclick=()=>autoPick(t,true);
+}
+
+/* ---------- Assistant ---------- */
+function context(){
+  const t=T();
+  const sq=S.squad.length?S.squad.map(p=>`- ${p.name} | pos: ${(p.pos||[]).join('/')||'?'} | ${ALL_ATTRS.filter(a=>(p.pos||[]).includes('GK')||!GK_ATTRS.includes(a)).map(a=>a+(p.attrs[a]??10)).join(' ')}`).join('\n'):'(empty — the user has not entered players yet)';
+  const cur=`${t.name}: IP ${t.ip}, OOP ${t.oop}\n`+t.slots.map((s,i)=>{const p=player(s.player);return `  slot ${i} ${ipSlot(t,i)[0]} (OOP ${oopSlot(t,i)[0]}): ${p?p.name:'empty'} — IP ${s.ipRole}, OOP ${s.oopRole}`}).join('\n')+
+   `\n  TI in possession: ${TI.ip.map(([k,o])=>k+'='+o.split('|')[t.ti.ip[k]]).join('; ')}\n  TI out of possession: ${TI.oop.map(([k,o])=>k+'='+o.split('|')[t.ti.oop[k]]).join('; ')}`;
+  const forms=FORMS.map(f=>`${f}: ${F[f].map((c,i)=>i+' '+c[0]).join(', ')}`).join('\n');
+  const roles=Object.keys(GROUPS).map(g=>`${g} (${GROUPS[g].join('/')}): IP ${rolesFor('ip',g).map(r=>r.id+'='+r.name).join(', ')} | OOP ${rolesFor('oop',g).map(r=>r.id+'='+r.name).join(', ')}`).join('\n');
+  const tis=['ip','oop'].map(ph=>TI[ph].map(([k,o])=>`${k}: ${o.split('|').join(' / ')}`).join('\n')).join('\n');
+  return `You are an expert Football Manager 27 tactics coach inside the user's "FM27 Tactics Lab" tool. FM27 (released 10 Nov 2026) keeps FM26's separate In Possession (IP) and Out of Possession (OOP) formations and roles and adds a Tactical Effectiveness system tied to training and familiarity. In-possession role names match FM27; out-of-possession roles are approximations. Be concise and scannable: short headers, bullets, and no filler.
+
+SQUAD (attributes 1-20; position groups):
+${sq}
+
+CURRENT TACTIC:
+${cur}
+
+FORMATIONS (slot index + position, IP order):
+${forms}
+
+ROLES by position group (use these abbreviations):
+${roles}
+
+TEAM INSTRUCTION OPTIONS:
+${tis}
+
+When you propose a complete tactic, write a short explanation first, then end with exactly one fenced \`\`\`json block shaped:
+{"name":"...","ip":"<formation key>","oop":"<formation key>","lineup":[{"slot":0,"player":"<exact squad name or null>","ipRole":"<abbr valid for that IP slot's group>","oopRole":"<abbr valid for the group of the OOP spot this player ends up in>"}, ... 11 entries in IP slot order],"ti":{"ip":{"<instruction>":"<option>"},"oop":{"<instruction>":"<option>"}}}
+OOP spots are matched automatically to the nearest OOP formation position. Only use squad players who exist. Do not output JSON unless proposing a full tactic.`;
+}
+function md(s){
+  s=s.replace(/```json[\s\S]*?(```|$)/g,'').replace(/```[\s\S]*?(```|$)/g,'');
+  const inl=x=>esc(x).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  let out='',inList=false;
+  for(const line of s.split('\n')){let m;
+    if((m=line.match(/^\s*[-*•]\s+(.*)/))||(m=line.match(/^\s*\d+[.)]\s+(.*)/))){if(!inList){out+='<ul>';inList=true}out+=`<li>${inl(m[1])}</li>`;continue}
+    if(inList){out+='</ul>';inList=false}
+    if((m=line.match(/^#{1,6}\s+(.*)/)))out+=`<h4>${inl(m[1])}</h4>`;else if(line.trim())out+=`<p>${inl(line)}</p>`;}
+  if(inList)out+='</ul>';return out;
+}
+function extractProposal(text){const m=text.match(/```json\s*([\s\S]*?)```/);if(!m)return null;try{const d=JSON.parse(m[1]);if(F[d.ip]&&F[d.oop]&&Array.isArray(d.lineup))return d}catch(e){}return null}
+function applyProposal(d){
+  const t=newTactic(String(d.name||'Assistant tactic').slice(0,60),d.ip,d.oop);
+  const byName=n=>n&&S.squad.find(p=>p.name.toLowerCase()===String(n).toLowerCase().trim());
+  for(const e of d.lineup){const i=+e.slot;if(!(i>=0&&i<t.slots.length))continue;const s=t.slots[i];const p=byName(e.player);if(p&&!t.slots.some(x=>x.player===p.id))s.player=p.id;
+    if(ROLES[e.ipRole])s.ipRole=e.ipRole;if(ROLES[e.oopRole])s.oopRole=e.oopRole}
+  fixRoles(t);
+  for(const ph of ['ip','oop'])if(d.ti&&d.ti[ph])for(const [k,v] of Object.entries(d.ti[ph])){const def=TI[ph].find(x=>x[0].toLowerCase()===k.toLowerCase());if(!def)continue;const j=def[1].split('|').findIndex(o=>o.toLowerCase()===String(v).toLowerCase());if(j>=0)t.ti[ph][def[0]]=j}
+  S.tactics.push(t);S.cur=t.id;persist();toast('Tactic added: '+t.name);
+  ui.tab='board';$$('nav.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.tab==='board'));$$('main section').forEach(s=>s.classList.toggle('on',s.id==='tab-board'));render();window.scrollTo(0,0);
+}
+const QUICK=['Build me a tactic that suits my squad','Review my current tactic: strengths, risks, fixes','Make a counter-attacking setup for away games vs stronger teams','Which signings would improve this tactic most?'];
+function renderAI(){
+  const el=$('#tab-ai');
+  if(!SAMPLE){el.innerHTML=`<div class="card empty">The assistant needs this page opened in Claude, where it can ask Claude for advice. Everything else works here.</div>`;return}
+  el.innerHTML=`<div class="chat" id="chat">${ui.chat.length?'':`<div class="card"><h3>Tactics assistant</h3><p class="small mut" style="margin:0">Claude sees your squad, current tactic and the role list. Ask for a full tactic and you'll get an <b>Apply</b> button.</p></div>`}
+   ${ui.chat.map((m,k)=>m.role==='user'?`<div class="msg u">${esc(m.content)}</div>`:`<div class="msg a">${md(m.content)||'<span class="mut">Thinking…</span>'}${m.prop?`<div class="prop"><b>${esc(m.prop.name||'Proposed tactic')}</b><div class="small mut">${esc(m.prop.ip)} in possession · ${esc(m.prop.oop)} out of possession</div><button class="btn sm acc" style="margin-top:8px" data-apply="${k}">Apply as new tactic</button></div>`:''}</div>`).join('')}</div>
+   ${ui.chat.length?'':`<div class="row" style="margin-bottom:10px">${QUICK.map(q=>`<button class="btn sm" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>`}
+   <div class="composer"><textarea class="in" id="aiIn" rows="1" placeholder="Ask about your tactic…"></textarea><button class="btn acc" id="aiSend"${ui.busy?' disabled':''}>${ui.busy?'…':'Send'}</button></div>
+   ${ui.chat.length?'<div class="row" style="margin-top:8px"><button class="btn sm ghost" id="aiClear">New conversation</button></div>':''}`;
+  $$('[data-q]',el).forEach(b=>b.onclick=()=>ask(b.dataset.q));
+  $$('[data-apply]',el).forEach(b=>b.onclick=()=>applyProposal(ui.chat[+b.dataset.apply].prop));
+  const inp=$('#aiIn',el);$('#aiSend',el).onclick=()=>{const v=inp.value.trim();if(v)ask(v)};
+  inp.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#aiSend',el).click()}};
+  const c=$('#aiClear',el);c&&(c.onclick=()=>{ui.chat=[];renderAI()});
+}
+async function ask(q){
+  if(ui.busy)return;ui.busy=true;ui.chat.push({role:'user',content:q});const msg={role:'assistant',content:''};ui.chat.push(msg);renderAI();window.scrollTo(0,document.body.scrollHeight);
+  const hist=ui.chat.slice(0,-1).map(m=>({role:m.role,content:m.content}));hist[0]={role:'user',content:context()+'\n\n---\nUser: '+hist[0].content};
+  if(hist.length>1)hist[hist.length-1]={role:'user',content:'(Current tool state, may have changed:)\n'+context().split('FORMATIONS')[0]+'\n---\nUser: '+q};
+  let last=0;
+  try{const r=await SAMPLE(hist,{cache:false,modelTier:'default',onText:({text})=>{msg.content=text;const now=Date.now();if(now-last>250&&ui.tab==='ai'){last=now;const b=$$('#chat .msg.a');const el=b[b.length-1];if(el)el.innerHTML=md(text)||'<span class="mut">Thinking…</span>'}}});
+    msg.content=r.text||msg.content;msg.prop=extractProposal(msg.content);}
+  catch(e){msg.content=e&&e.code==='rate_limited'?'Rate limited. Give it a minute and try again.':e&&e.code==='not_granted'?'The assistant was not allowed to run.':'Something went wrong: '+((e&&e.message)||'unknown error');}
+  ui.busy=false;if(ui.tab==='ai'){renderAI();window.scrollTo(0,document.body.scrollHeight)}
+}
+async function importShots(){
+  let lim={};try{lim=await SAMPLE.limits()}catch(e){}
+  if(!lim.images)return toast('Image reading is not available here');
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;
+  inp.onchange=async()=>{const files=[...inp.files];if(!files.length)return;let ok=0;
+    for(const [k,f] of files.entries()){toast(`Reading screenshot ${k+1}/${files.length}…`);
+      try{const r=await SAMPLE(`This is a Football Manager player profile screenshot. Extract the player. Reply with ONLY JSON: {"name":"Full Name","positions":[...],"attrs":{...}}.
+positions: any of ${Object.keys(GROUPS).map(g=>g+'='+GROUP_LABEL[g]).join(', ')} (map FM codes: GK→GK, D(C)→CB, D(L/R)→FB, WB(L/R)→WB, DM→DM, M(C)→CM, M(L/R)→WM, AM(L/R)→AW, AM(C)→AM, ST→ST; only natural/accomplished positions).
+attrs keys (1-20 integers; omit any not visible; if values show as ranges like 12-15 use the middle): ${ALL_ATTRS.map(a=>a+'='+ATTR_NAME[a]).join(', ')}.`,{images:[f],modelTier:'default'});
+        const m=r.text.match(/\{[\s\S]*\}/);const d=JSON.parse(m[0]);
+        const attrs=Object.fromEntries(ALL_ATTRS.map(a=>[a,10]));for(const [a,v] of Object.entries(d.attrs||{}))if(a in attrs&&+v>=1&&+v<=20)attrs[a]=Math.round(+v);
+        S.squad.push({id:uid(),name:String(d.name||'Unknown player').slice(0,60),pos:(d.positions||[]).filter(g=>GROUPS[g]),attrs});ok++;persist();if(ui.tab==='squad')renderSquad();
+      }catch(e){toast(e&&e.code==='rate_limited'?'Rate limited. Try again shortly.':`Couldn't read screenshot ${k+1}`);if(e&&e.code==='rate_limited')break;await new Promise(r=>setTimeout(r,1200))}}
+    if(ok)toast(`Added ${ok} player${ok>1?'s':''}. Check their attributes.`)};
+  inp.click();
+}
+
+/* ---------- File import (CSV / HTML / pasted table) ---------- */
+const HDR={};
+(()=>{const add=(k,...ns)=>ns.forEach(n=>HDR[n.toLowerCase()]=k);
+  for(const a of ALL_ATTRS)add(a,a,ATTR_NAME[a]);
+  add('Tck','Tackling','Tkl');add('Rus','TRO','Rushing Out (Tendency)','Rushing Out');add('1v1','One On Ones','One-on-Ones');add('Aer','Aerial Ability','Aerial Reach','Aer');
+  add('Cmd','Command Of Area','Cmd');add('Jum','Jumping Reach','Jumping');add('OtB','Off The Ball','Otb');add('Com','Communication');add('Kic','Kicking');
+  add('_name','Name','Player','Player Name','Nome','Naam','Full Name');add('_uid','Unique ID','UID','ID','Player ID');add('_pos','Position','Positions','Best Pos','Best Position','Posição','Positie');})();
+function hdrKey(h){const s=String(h??'').trim().toLowerCase();if(HDR[s])return HDR[s];const n=s.replace(/^(attributes?|attr|technical|mental|physical|goalkeeping)[._ ]/,'').replace(/[_.\-]+/g,' ').replace(/\s+/g,' ').trim();if(HDR[n])return HDR[n];const c=n.replace(/ /g,'');for(const k in HDR)if(k.replace(/[^a-z0-9]/g,'')===c)return HDR[k];return null}
+const SHORT_POS={GK:'GK',SW:'CB',DC:'CB',CB:'CB',DL:'FB',DR:'FB',LB:'FB',RB:'FB',WBL:'WB',WBR:'WB',LWB:'WB',RWB:'WB',DMC:'DM',DM:'DM',CDM:'DM',MC:'CM',CM:'CM',ML:'WM',MR:'WM',LM:'WM',RM:'WM',AMC:'AM',CAM:'AM',AML:'AW',AMR:'AW',LW:'AW',RW:'AW',ST:'ST',STC:'ST',SC:'ST',CF:'ST'};
+function parsePositions(str){const toks=String(str||'').toUpperCase().split(/[,;/|\s]+/).filter(Boolean);if(toks.length&&toks.every(t=>SHORT_POS[t]))return[...new Set(toks.map(t=>SHORT_POS[t]))];return parsePositionsFM(str)}
+function parsePositionsFM(str){const out=new Set();String(str||'').toUpperCase().split(',').forEach(seg=>{const m=seg.trim().match(/^([A-Z/]+)\s*(?:\(([RLC]+)\))?/);if(!m)return;const sides=(m[2]||'C').split('');
+  for(const r of m[1].split('/')){
+    if(r==='GK')out.add('GK');else if(r==='DM')out.add('DM');else if(r==='WB')out.add('WB');else if(r==='ST'||r==='S'||r==='F')out.add('ST');
+    else if(r==='D'){if(sides.includes('C'))out.add('CB');if(sides.some(s=>s!=='C'))out.add('FB')}
+    else if(r==='M'){if(sides.includes('C'))out.add('CM');if(sides.some(s=>s!=='C'))out.add('WM')}
+    else if(r==='AM'){if(sides.includes('C'))out.add('AM');if(sides.some(s=>s!=='C'))out.add('AW')}}});return[...out]}
+function parseVal(v){const s=String(v??'').trim();let m=s.match(/^(\d{1,2})\s*[-–]\s*(\d{1,2})$/);if(m)return Math.max(1,Math.min(20,Math.round((+m[1]+ +m[2])/2)));m=s.match(/^(\d{1,2})(?:[.,]\d+)?$/);if(m)return Math.max(1,Math.min(20,+m[1]));return null}
+function parseTable(rows){
+  rows=rows.filter(r=>r.some(c=>String(c).trim()));
+  let hi=-1,map=null;
+  for(let i=0;i<Math.min(rows.length,8);i++){const mm=rows[i].map(h=>hdrKey(h));if(mm.filter(Boolean).length>=4){hi=i;map=mm;break}}
+  if(hi<0)return{players:[],matched:[],unmatched:[]};
+  const body=rows.slice(hi+1);
+  // "Pos" can mean Position or Positioning: decide from the values.
+  map.forEach((k,c)=>{if(k==='Pos'){const vals=body.slice(0,15).map(r=>r[c]).filter(v=>v&&String(v).trim()&&String(v).trim()!=='-');if(vals.length&&vals.filter(v=>parseVal(v)==null).length>vals.length/2)map[c]=map.includes('_pos')?null:'_pos'}});
+  let nameCol=map.indexOf('_name');if(nameCol<0)nameCol=rows[hi].findIndex((h,c)=>!map[c]);
+  const posCol=map.indexOf('_pos');
+  const players=[];
+  for(const r of body){const name=String(r[nameCol]??'').replace(/\s+/g,' ').trim();if(!name||parseVal(name)!=null)continue;
+    const attrs={};map.forEach((k,c)=>{if(k&&k[0]!=='_'){const v=parseVal(r[c]);if(v!=null)attrs[k]=v}});
+    if(!Object.keys(attrs).length)continue;
+    const uc=map.indexOf('_uid');players.push({name:name.slice(0,60),uid:uc>=0?String(r[uc]||'').trim()||null:null,pos:posCol>=0?parsePositions(r[posCol]):[],attrs})}
+  return{players,matched:[...new Set(map.filter(k=>k&&k[0]!=='_'))],unmatched:rows[hi].filter((h,c)=>!map[c]&&c!==nameCol&&String(h).trim()),hasPos:posCol>=0};
+}
+function splitDelimited(text){
+  const first=(text.split(/\r?\n/).find(l=>l.trim())||'');
+  const d=['\t',';',',','|'].sort((a,b)=>first.split(b).length-first.split(a).length)[0];
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<text.length;i++){const ch=text[i];
+    if(q){if(ch==='"'){if(text[i+1]==='"'){cell+='"';i++}else q=false}else cell+=ch;continue}
+    if(ch==='"')q=true;else if(ch===d){row.push(cell);cell=''}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);rows.push(row);row=[];cell=''}else cell+=ch}
+  row.push(cell);rows.push(row);return rows.map(r=>r.map(c=>c.trim()));
+}
+function parseHTMLTable(text){const doc=new DOMParser().parseFromString(text,'text/html');const tables=[...doc.querySelectorAll('table')];if(!tables.length)return{players:[],matched:[],unmatched:[]};
+  let best=null;for(const t of tables){const r=parseTable([...t.querySelectorAll('tr')].map(tr=>[...tr.children].map(td=>td.textContent.replace(/\s+/g,' ').trim())));if(!best||r.players.length>best.players.length)best=r}return best}
+function parseText(text){text=String(text||'').replace(/^﻿/,'');return /<table[\s>]/i.test(text)?parseHTMLTable(text):parseTable(splitDelimited(text))}
+function importFile(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='.csv,.html,.htm,.txt,.tsv,text/csv,text/html,text/plain';
+  inp.onchange=async()=>{const f=inp.files[0];if(!f)return;let text='';try{text=await f.text()}catch(e){return toast('Could not open that file')}
+    const r=parseText(text);if(!r.players.length)return toast('No players found. Does the view have Name and attribute columns?');previewImport(r,f.name)};
+  inp.click();
+}
+function previewImport(r,src){
+  const match=ip=>S.squad.find(p=>(ip.uid&&p.uid===ip.uid)||p.name.toLowerCase()===ip.name.toLowerCase());const known={has:n=>!!r.players.find(x=>x.name.toLowerCase()===n)&&!!match(r.players.find(x=>x.name.toLowerCase()===n))};const upd=r.players.filter(p=>match(p)).length;
+  const missing=ALL_ATTRS.filter(a=>!r.matched.includes(a));const missOut=missing.filter(a=>!GK_ATTRS.includes(a));
+  openSheet(`<h3>Import from ${esc(src)}</h3>
+   <p style="margin-top:0"><b>${r.players.length}</b> players · <b>${r.matched.length}</b>/${ALL_ATTRS.length} attributes recognised${r.hasPos?' · positions ✓':' · <span style="color:var(--ok)">no position column</span>'}</p>
+   ${missOut.length?`<p class="small" style="color:var(--ok)">Missing: ${missOut.map(a=>ATTR_NAME[a]).join(', ')}. These will count as 10. Add them to your FM view for accurate scores.</p>`:''}
+   ${r.unmatched.length?`<p class="small mut">Ignored columns: ${r.unmatched.slice(0,20).map(esc).join(', ')}${r.unmatched.length>20?'…':''}</p>`:''}
+   <div class="small" style="max-height:30vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin:8px 0">${r.players.map(p=>`<div>${esc(p.name)} <span class="mut">${p.pos.join(' ')}</span>${known.has(p.name.toLowerCase())?' <span class="chip">update</span>':''}</div>`).join('')}</div>
+   <div class="roleList"><button class="btn acc" data-m="merge">Merge: update ${upd} existing, add ${r.players.length-upd} new</button><button class="btn" data-m="replace">Replace whole squad</button><button class="btn ghost" data-x>Cancel</button></div>`,el=>{
+    $('[data-x]',el).onclick=closeSheet;
+    $$('[data-m]',el).forEach(b=>b.onclick=()=>{const replace=b.dataset.m==='replace';
+      if(replace){S.squad=[];S.tactics.forEach(t=>t.slots.forEach(s=>s.player=null))}
+      for(const ip of r.players){const ex=match(ip);
+        const extra={};for(const k of ['ratings','age','ca','pa'])if(ip[k]!=null)extra[k]=ip[k];
+        if(ex){Object.assign(ex.attrs,ip.attrs);if(ip.pos.length)ex.pos=ip.pos;if(ip.uid)ex.uid=ip.uid;Object.assign(ex,extra)}
+        else S.squad.push({id:uid(),uid:ip.uid||undefined,name:ip.name,pos:ip.pos,attrs:{...Object.fromEntries(ALL_ATTRS.map(a=>[a,10])),...ip.attrs},...extra})}
+      if(r.onDone)r.onDone();
+      persist();closeSheet();render();toast(`Imported ${r.players.length} players`)});
+  });
+}
+
+/* ---------- Reading FM saves (desktop app) ---------- */
+let LOCAL=false;
+function fmtSize(b){return b>1e9?(b/1e9).toFixed(1)+' GB':(b/1e6).toFixed(0)+' MB'}
+function fmtAgo(s){const d=(Date.now()/1000-s);return d<90?'just now':d<5400?Math.round(d/60)+' min ago':d<129600?Math.round(d/3600)+' h ago':Math.round(d/86400)+' days ago'}
+async function pickSave(){
+  openSheet('<h3>Load from FM save</h3><p class="mut">Looking for your saves…</p>');
+  let d;try{d=await (await fetch('/api/saves')).json()}catch(e){return openSheet('<h3>Load from FM save</h3><p>The Lab app isn\'t answering. Is its window still open?</p>')}
+  const list=d.saves||[];
+  openSheet(`<div class="row" style="justify-content:space-between"><h3 style="margin:0">Pick a save</h3><button class="btn sm ghost" data-x>Close</button></div>
+   ${list.length?`<div class="roleList" style="margin-top:10px">${list.map((s,k)=>`<button class="role" data-k="${k}" style="grid-template-columns:1fr auto"><span><b style="font-size:15px">${esc(s.name)}</b><br><span class="small mut">${fmtAgo(s.modified)} · ${fmtSize(s.size)}</span></span><span class="chip">Read</span></button>`).join('')}</div>`
+   :`<p>No FM27 saves found.</p>`}
+   <p class="small mut" style="margin-top:12px">Game Pass and Steam <b>cloud</b> saves aren't stored as files. In FM, save a copy to your computer (Save As → local) and it will show up here. Searched: ${(d.folders||[]).map(esc).join('; ')||'no save folders found'}.</p>`,el=>{
+    $('[data-x]',el).onclick=closeSheet;$$('[data-k]',el).forEach(b=>b.onclick=()=>readSave(list[+b.dataset.k].path,false))});
+}
+async function readSave(path,quick){
+  const name=path.split(/[\\/]/).pop();
+  openSheet(`<h3>Reading ${esc(name)}</h3><p class="mut">Unpacking the save. Big saves take 10–60 seconds…</p>`);
+  let d;try{d=await (await fetch('/api/read?path='+encodeURIComponent(path))).json()}catch(e){d={error:'The Lab app stopped answering. Is its window still open?'}}
+  if(d.error)return openSheet(`<h3>Couldn't read the save</h3><p>${esc(d.error)}</p><button class="btn" data-x>Close</button>`,el=>$('[data-x]',el).onclick=closeSheet);
+  const players=d.players.map(sp=>{const pos=[];for(const g in GROUPS){const best=Math.max(...GROUPS[g].map(c=>sp.ratings[CODE_RATING[c]]??0));if(best>=15)pos.push(g)}
+    return{name:sp.name,uid:sp.uid,pos,attrs:sp.attrs,ratings:sp.ratings,age:sp.age,ca:sp.ca,pa:sp.pa}});
+  const r={players,matched:ALL_ATTRS.filter(a=>players.some(p=>a in p.attrs)),unmatched:[],hasPos:true,onDone:()=>{S.lastSave=path;persist();render()}};
+  if(quick){const fake={dataset:{m:'merge'}};previewImport(r,`${d.club||name}`);const b=$('[data-m="merge"]');b&&b.click();toast(`Refreshed ${players.length} players from ${d.club||'save'}`);return}
+  previewImport(r,`${d.club||'save'} · ${d.date||''} · ${d.game||''} ${d.build||''}`.trim());
+}
+(async()=>{if(!/^(127\.0\.0\.1|localhost)$/.test(location.hostname))return;try{const j=await (await fetch('/api/ping')).json();if(j.local){LOCAL=true;if(ui.tab==='squad')renderSquad();document.title='FM27 Tactics Lab'}}catch(e){}})();
+
+/* ---------- Boot ---------- */
+S=load();render();updateSaveBtn();
+(function connect(tries){
+  if(!(window.claude&&window.claude.use)){if(tries<40)setTimeout(()=>connect(tries+1),250);return}
+  window.claude.use('artifact').then(a=>{if(!a)return;ART=a;cloudDirty=!!(S.savedAt>(S.cloudAt||0));updateSaveBtn()}).catch(()=>{});
+  window.claude.use('sample').then(s=>{if(!s)return;SAMPLE=s;if(ui.tab==='ai'||ui.tab==='squad')render()}).catch(()=>{});
+})(0);
+})();
+</script>
+</body>
+</html>
