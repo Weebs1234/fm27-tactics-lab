@@ -43,8 +43,12 @@ jobs:
           path: dist/FM27TacticsLab.exe
 
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v0.1.{0}', github.run_number) }}
+          name: FM27 Tactics Lab ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v0.1.{0}', github.run_number) }}
+          target_commitish: ${{ github.sha }}
           files: dist/FM27TacticsLab.exe
+          make_latest: true
           generate_release_notes: true

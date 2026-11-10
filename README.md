@@ -29,7 +29,7 @@ python app/tactics_lab.py
 
 ## Build the exe
 
-GitHub Actions builds `FM27TacticsLab.exe` on every push to `main` (under the run's Artifacts). To publish it as a Release, push a tag such as `v0.1.0`.
+Every push to `main` builds `FM27TacticsLab.exe` on Windows with GitHub Actions and publishes it as a new Release (`v0.1.<build number>`).
 
 ## Notes
 
